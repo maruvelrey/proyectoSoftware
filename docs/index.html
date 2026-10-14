@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIENDA CHAOS</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Arial Black', 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background-color: #ff8c00; color: #333; min-height: 100vh; overflow-x: hidden; }
+
+        /* Contenedor de Login */
+        .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #ff8c00; }
+        .login-card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 350px; text-align: center; }
+        .login-card h2 { margin-bottom: 20px; color: #111; letter-spacing: 1px; }
+        .login-card input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; font-family: 'Segoe UI', sans-serif; }
+        .login-card button { width: 100%; padding: 12px; background: #e91e63; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; }
+        .login-card button:hover { background: #d81b60; }
+        .error-msg { color: #d32f2f; font-size: 13px; margin-top: 10px; display: none; font-family: 'Segoe UI', sans-serif; }
+
+        /* Encabezado Principal */
+        #tienda-app { display: none; background: white; min-height: 100vh; }
+        header { background-color: #111; color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; }
+        header h1 { font-size: 24px; letter-spacing: 1px; }
+        nav { display: flex; gap: 10px; align-items: center; }
+        nav button { border: none; padding: 10px 18px; font-weight: bold; border-radius: 20px; cursor: pointer; font-size: 13px; }
+        .btn-nav-link { background-color: transparent; color: #fff; }
+        .btn-nav-link:hover { background-color: #222; }
+        .btn-nav-active { background-color: #e91e63; color: white; }
+        .btn-nav-add { background-color: #e91e63; color: white; border: none; }
+        .btn-nav-add:hover { background-color: #d81b60; }
+        .btn-nav-exit { background-color: transparent; color: #fff; border: 1px solid #fff; }
+        .btn-nav-exit:hover { background-color: #333; }
+
+        /* Vista de Historial / Lista de Productos */
+        .center-layout { width: 100%; max-width: 900px; margin: 0 auto; padding: 50px 20px; display: flex; flex-direction: column; align-items: center; }
+        .history-title-container { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
+        .history-title { font-size: 45px; color: #ff5722; text-transform: uppercase; text-align: center; line-height: 1.1; }
+
+        .history-list { width: 100%; max-width: 650px; display: flex; flex-direction: column; gap: 20px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; font-family: 'Segoe UI', sans-serif; font-size: 20px; font-weight: 600; color: #222; }
+        .btn-ver-pill { background-color: #8bc34a; color: white; border: none; padding: 12px 35px; border-radius: 25px; font-size: 16px; font-weight: 900; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-ver-pill:hover { background-color: #7cb342; }
+
+        /* Vista Dividida (Pestaña del Producto en Pantalla Completa) */
+        .split-layout { display: flex; width: 100vw; min-height: 100vh; }
+        .left-panel { flex: 1; padding: 60px 80px; background: #fff; display: flex; flex-direction: column; justify-content: center; position: relative; }
+        .right-panel { flex: 1; background: #ff8c00; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 40px; }
+
+        .product-title-container { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 20px; }
+        .product-main-title { font-size: 50px; color: #ff5722; line-height: 1.1; text-transform: uppercase; word-break: break-word; }
+        .arrow-icon { width: 60px; height: 60px; background: #2196f3; clip-path: polygon(40% 0%, 100% 0%, 100% 60%, 75% 35%, 35% 75%, 25% 65%, 65% 25%); flex-shrink: 0; margin-top: 10px; }
+
+        .product-desc { font-family: 'Segoe UI', sans-serif; font-size: 18px; color: #444; margin-bottom: 30px; font-weight: 500; }
+
+        /* Botones de Acción Estilo Pill */
+        .action-buttons { display: flex; flex-direction: column; gap: 15px; width: 220px; }
+        .btn-action { display: flex; align-items: center; gap: 10px; padding: 14px 25px; border: none; border-radius: 30px; color: white; font-size: 16px; font-weight: 900; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s; }
+        .btn-action:hover { transform: translateY(-2px); }
+        .btn-eliminar { background-color: #ff5252; }
+        .btn-modificar { background-color: #29b6f6; }
+
+        /* Marco Ondulado/Rosado */
+        .image-frame-container { position: relative; width: 340px; height: 340px; display: flex; align-items: center; justify-content: center; }
+        .wavy-border { position: absolute; width: 100%; height: 100%; background: #ff80ab; border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation: morph 8s ease-in-out infinite; z-index: 1; }
+        @keyframes morph {
+            0% { border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%; }
+            50% { border-radius: 60% 40% 40% 60% / 50% 60% 40% 50%; }
+            100% { border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%; }
+        }
+        .product-display-img { position: relative; z-index: 2; width: 88%; height: 88%; object-fit: contain; border-radius: 20px; background: white; padding: 10px; }
+
+        .dots-pagination { display: flex; gap: 12px; margin-top: 30px; z-index: 2; }
+        .dot { width: 14px; height: 14px; background: rgba(255, 255, 255, 0.5); border-radius: 50%; }
+        .dot.active { background: white; transform: scale(1.2); }
+
+        /* Modales */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 400px; font-family: 'Segoe UI', sans-serif; }
+        .modal-content-lg { background: white; padding: 25px; border-radius: 20px; width: 80%; max-width: 900px; height: 85vh; display: flex; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
+        .modal-content input { width: 100%; padding: 10px; margin: 8px 0 16px 0; border: 1px solid #ccc; border-radius: 8px; font-family: 'Segoe UI', sans-serif; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .btn-save { background: #e91e63; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #ccc; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<!-- VISTA A: DETALLE DEL PRODUCTO EN PESTAÑA SEPARADA (?id=X) -->
+<div id="vista-producto-independiente" class="split-layout" style="display: none;">
+    <div class="left-panel">
+        <div class="product-title-container">
+            <h2 class="product-main-title" id="soloNombre">CARGANDO...</h2>
+            <div class="arrow-icon"></div>
+        </div>
+
+        <p class="product-desc" id="soloPrecio">Precio: $0.00</p>
+
+        <div class="action-buttons">
+            <button class="btn-action btn-eliminar" onclick="eliminarProductoIndependiente()">🛒 ELIMINAR</button>
+            <button class="btn-action btn-modificar" onclick="abrirModalEditarIndependiente()">🛒 MODIFICAR</button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="image-frame-container">
+            <div class="wavy-border"></div>
+            <img id="soloImagen" class="product-display-img" src="https://via.placeholder.com/300" alt="Producto" onerror="this.src='https://via.placeholder.com/300?text=Sin+Imagen'">
+        </div>
+
+        <div class="dots-pagination">
+            <span class="dot active"></span>
+        </div>
+    </div>
+</div>
+
+<!-- VISTA B: PÁGINA PRINCIPAL / HISTORIAL -->
+<div id="vista-principal-app" style="display: none;">
+    <!-- Login -->
+    <div id="login-screen" class="login-wrapper">
+        <div class="login-card">
+            <h2>TIENDA CHAOS</h2>
+            <form onsubmit="iniciarSesion(event)">
+                <input type="text" id="username" placeholder="Usuario" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="submit">INGRESAR</button>
+            </form>
+            <div id="login-error" class="error-msg">Usuario o contraseña incorrectos</div>
+        </div>
+    </div>
+
+    <!-- Tienda / Historial -->
+    <div id="tienda-app">
+        <header>
+            <h1>TIENDA CHAOS</h1>
+            <nav>
+                <button class="btn-nav-link" onclick="abrirModalReferencia()">REFERENCIA</button>
+                <button class="btn-nav-active">PRODUCTOS</button>
+                <button class="btn-nav-add" onclick="abrirModalCrear()">+ AGREGAR PRODUCTO</button>
+                <button class="btn-nav-exit" onclick="cerrarSesion()">SALIR</button>
+            </nav>
+        </header>
+
+        <div class="center-layout">
+            <div class="history-title-container">
+                <h2 class="history-title">HISTORIAL DE<br>PRODUCTOS</h2>
+                <div class="arrow-icon"></div>
+            </div>
+
+            <div class="history-list" id="listaHistorial">
+                <!-- Productos cargados con target="_blank" -->
+            </div>
+
+            <div class="dots-pagination" style="margin-top:40px;">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot active" style="background:#ff8c00;"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Crear / Editar -->
+<div class="modal" id="modalProducto">
+    <div class="modal-content">
+        <h3 id="modalTitulo">Nuevo Producto</h3>
+        <form id="formProducto" onsubmit="guardarProducto(event)">
+            <input type="hidden" id="productoId">
+
+            <label>Nombre</label>
+            <input type="text" id="nombre" required placeholder="Ej. Monitor Dell">
+
+            <label>Precio ($)</label>
+            <input type="number" step="0.01" id="precio" required placeholder="Ej. 120.00">
+
+            <label>URL de la Imagen</label>
+            <input type="url" id="imagenUrl" required placeholder="https://ejemplo.com/imagen.jpg">
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="cerrarModalForm()">Cancelar</button>
+                <button type="submit" class="btn-save">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: Referencia PDF -->
+<div class="modal" id="modalReferencia">
+    <div class="modal-content-lg">
+        <h3>Enunciado del Proyecto</h3>
+        <iframe id="visorPdf" src="" type="application/pdf"></iframe>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="cerrarModalReferencia()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = '/api/productos';
+    let productoActual = null;
+
+    // Detectar si la página fue abierta con una URL de producto (?id=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const productoIdParam = urlParams.get('id');
+
+    if (productoIdParam) {
+        // MODO PESTAÑA INDEPENDIENTE
+        document.getElementById('vista-principal-app').style.display = 'none';
+        document.getElementById('vista-producto-independiente').style.display = 'flex';
+        cargarDetalleIndependiente(productoIdParam);
+    } else {
+        // MODO PÁGINA PRINCIPAL
+        document.getElementById('vista-principal-app').style.display = 'block';
+        if (localStorage.getItem('auth') === 'true') {
+            mostrarApp();
+        }
+    }
+
+    // Cargar datos en la pestaña de producto individual
+    async function cargarDetalleIndependiente(id) {
+        try {
+            const res = await fetch(`${API_URL}/${id}`);
+            if (!res.ok) throw new Error('No encontrado');
+            productoActual = await res.json();
+
+            document.getElementById('soloNombre').innerText = productoActual.nombre;
+            document.getElementById('soloPrecio').innerText = `Precio: $${productoActual.precio}`;
+            document.getElementById('soloImagen').src = productoActual.imagenUrl || 'https://via.placeholder.com/300';
+        } catch (e) {
+            document.getElementById('soloNombre').innerText = "PRODUCTO NO ENCONTRADO";
+        }
+    }
+
+    // Autenticación
+    function iniciarSesion(e) {
+        e.preventDefault();
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+
+        if (user === 'MVelasquez' && pass === '123456') {
+            localStorage.setItem('auth', 'true');
+            mostrarApp();
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    }
+
+    function cerrarSesion() {
+        localStorage.removeItem('auth');
+        document.getElementById('tienda-app').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    function mostrarApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('tienda-app').style.display = 'block';
+        cargarProductos();
+    }
+
+    // Cargar lista de productos (Vista Principal)
+    async function cargarProductos() {
+        try {
+            const res = await fetch(API_URL);
+            const productos = await res.json();
+            const contenedor = document.getElementById('listaHistorial');
+            contenedor.innerHTML = '';
+
+            const fechaActual = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+
+            if (productos.length === 0) {
+                contenedor.innerHTML = '<p style="text-align:center; font-family:\'Segoe UI\';">No hay productos disponibles.</p>';
+                return;
+            }
+
+            productos.forEach(p => {
+                contenedor.innerHTML += `
+                        <div class="history-item">
+                            <span>${p.nombre} - - ${fechaActual}</span>
+                            <a class="btn-ver-pill" href="index.html?id=${p.id}" target="_blank">
+                                🛒 VER
+                            </a>
+                        </div>
+                    `;
+            });
+        } catch (e) {
+            console.error("Error al cargar productos:", e);
+        }
+    }
+
+    // Modales y acciones
+    function abrirModalCrear() {
+        document.getElementById('modalTitulo').innerText = 'Nuevo Producto';
+        document.getElementById('productoId').value = '';
+        document.getElementById('formProducto').reset();
+        document.getElementById('modalProducto').style.display = 'flex';
+    }
+
+    function abrirModalEditarIndependiente() {
+        if (!productoActual) return;
+        document.getElementById('modalTitulo').innerText = 'Editar Producto';
+        document.getElementById('productoId').value = productoActual.id;
+        document.getElementById('nombre').value = productoActual.nombre;
+        document.getElementById('precio').value = productoActual.precio;
+        document.getElementById('imagenUrl').value = productoActual.imagenUrl;
+        document.getElementById('modalProducto').style.display = 'flex';
+    }
+
+    function cerrarModalForm() {
+        document.getElementById('modalProducto').style.display = 'none';
+    }
+
+    async function guardarProducto(e) {
+        e.preventDefault();
+        const id = document.getElementById('productoId').value;
+
+        const producto = {
+            nombre: document.getElementById('nombre').value,
+            precio: parseFloat(document.getElementById('precio').value),
+            imagenUrl: document.getElementById('imagenUrl').value
+        };
+
+        if (id) producto.id = parseInt(id);
+
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(producto)
+        });
+
+        const guardado = await res.json();
+        cerrarModalForm();
+
+        if (productoIdParam) {
+            // Actualiza la pestaña individual actual
+            window.location.href = `index.html?id=${guardado.id || id}`;
+        } else {
+            // Abre el producto recién creado en una pestaña nueva
+            window.open(`index.html?id=${guardado.id}`, '_blank');
+            cargarProductos();
+        }
+    }
+
+    async function eliminarProductoIndependiente() {
+        if (!productoActual) return;
+        if (confirm(`¿Deseas eliminar "${productoActual.nombre}"?`)) {
+            await fetch(`${API_URL}/${productoActual.id}`, { method: 'DELETE' });
+            window.close(); // Cierra la pestaña del producto
+        }
+    }
+
+    function abrirModalReferencia() {
+        document.getElementById('visorPdf').src = '/pdf/Proyecto-Software.pdf';
+        document.getElementById('modalReferencia').style.display = 'flex';
+    }
+
+    function cerrarModalReferencia() {
+        document.getElementById('modalReferencia').style.display = 'none';
+        document.getElementById('visorPdf').src = '';
+    }
+</script>
+</body>
+</html>
